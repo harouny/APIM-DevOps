@@ -2,7 +2,7 @@ parameters:
     apiId: ''
     enableAPIsDeployment: 'false'
 steps:
-- template: 'deployAPIM.yaml'
+- template: 'deploy.yaml'
   parameters:
     artifactsRoot: '$(Build.Repository.LocalPath)'
     deploymentMode: 'Validation'
