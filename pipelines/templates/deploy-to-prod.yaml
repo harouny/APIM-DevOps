@@ -1,0 +1,19 @@
+parameters:
+    apiId: ''
+    enableAPIsDeployment: 'false'
+    disableAPITests: 'false'
+    continueOnAPITestsError: 'false'
+  steps:
+  - download: current
+    artifact: drop
+  - template: 'deploy.yaml'
+    parameters:
+      artifactsRoot: '$(Pipeline.Workspace)'
+      azureSubscription: 'apim-devops-demo-sp'
+      environmentName: 'prod'
+      resourceGroup: 'play-with-apim'
+      ARMTemplateContainerName: '$(Build.BuildId)-$(Environment.Id)'
+      enableAPIsDeployment: '${{ parameters.enableAPIsDeployment }}'
+      apiId: '${{ parameters.apiId }}'
+      disableAPITests: '${{ parameters.disableAPITests }}'
+      continueOnAPITestsError: '${{ parameters.continueOnAPITestsError }}'

@@ -1,0 +1,90 @@
+parameters:
+    artifactsRoot: ''
+    ARMTemplateContainerName: ''
+    deploymentMode: 'Incremental'
+    environmentName: ''
+    resourceGroupLocation: 'Australia Southeast'
+    resourceGroup: ''
+    apiId: ''
+    azureSubscription: ''
+    enableAPIsDeployment: 'false'
+    disableAPITests: 'false'
+    continueOnAPITestsError: 'false'
+    ARMTemplateStorageName: 'apimdemopipelinestorage'
+    ARMTemplateStorageServiceConnection: 'apim-devops-demo-sp'
+  
+  steps:
+    
+    - task: CopyFiles@2
+      displayName: 'Select files to upload to storage'
+      inputs:
+        sourceFolder: '${{ parameters.artifactsRoot }}/arm'
+        targetFolder: '${{ parameters.artifactsRoot }}/to_storage'
+        # APIM deployment - exclude APIs from copying
+        ${{ if and(eq(parameters.apiId, ''), eq(parameters.enableAPIsDeployment, 'false')) }}:
+          contents: |
+            **
+            !apim\apis\*\**
+            !apim\**\tests\**
+        # Full APIM deployment - don't exclude APIs from copying
+        ${{ if and(eq(parameters.apiId, ''), eq(parameters.enableAPIsDeployment, 'true')) }}:
+          contents: |
+            **
+            !apim\**\tests\**
+        # API deployment - exclude all other APIs from copying
+        ${{ if ne(parameters.apiId, '') }}:
+          contents: |
+            **
+            !apim\apis\*\**
+            apim\apis\${{ parameters.apiId }}\**
+            !apim\**\tests\**
+    
+    - task: AzureFileCopy@3
+      displayName: 'Create Temporary Blob Container'
+      inputs:
+        SourcePath: '${{ parameters.artifactsRoot }}/to_storage'
+        azureSubscription: '${{ parameters.ARMTemplateStorageServiceConnection }}'
+        Destination: 'AzureBlob'
+        storage: '${{ parameters.ARMTemplateStorageName }}'
+        ContainerName: '${{ parameters.ARMTemplateContainerName }}'
+        outputStorageUri: 'StorageUri'
+        outputStorageContainerSasToken: 'SasToken'
+        sasTokenTimeOutInMinutes: '300'
+  
+    - task: AzureResourceGroupDeployment@2
+      displayName: 'Deploy ARM templates - ${{ parameters.deploymentMode }}'
+      inputs:
+        azureSubscription: '${{ parameters.azureSubscription }}'
+        action: 'Create Or Update Resource Group'
+        resourceGroupName: '${{ parameters.resourceGroup }}'
+        location: '${{ parameters.resourceGroupLocation }}'
+        templateLocation: 'URL of the file'
+        deploymentMode: '${{ parameters.deploymentMode }}'
+        deploymentName: 'deployment-${{ parameters.ARMTemplateContainerName }}'
+        ${{ if eq(parameters.apiId, '') }}:
+          overrideParameters: -enableAPIsDeployment ${{ parameters.enableAPIsDeployment }}
+          csmFileLink: '$(StorageUri)template.json$(SasToken)'
+          csmParametersFileLink: '$(StorageUri)parameters.${{ parameters.environmentName }}.json$(SasToken)'
+        ${{ if ne(parameters.apiId, '') }}:
+          csmFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/template.json$(SasToken)'
+          csmParametersFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/template.parameters.${{ parameters.environmentName }}.json$(SasToken)'
+    
+  
+    - task: AzureCLI@1
+      displayName: 'Delete Temporary Blob Container'
+      inputs:
+        azureSubscription: '${{ parameters.ARMTemplateStorageServiceConnection }}'
+        scriptLocation: inlineScript
+        inlineScript: 'az storage container delete --name ${{ parameters.ARMTemplateContainerName }} --account-name ${{ parameters.ARMTemplateStorageName }}'
+        failOnStandardError: true
+      condition: always()
+  
+    - template: runAPITests.yaml
+      parameters:
+        artifactsRoot: '${{ parameters.artifactsRoot }}'
+        environmentName: '${{ parameters.environmentName }}'
+        resourceGroup: '${{ parameters.resourceGroup }}'
+        apiId: '${{ parameters.apiId }}'
+        azureSubscription: '${{ parameters.azureSubscription }}'
+        disableAPITests: '${{ parameters.disableAPITests }}'
+        continueOnAPITestsError: ${{ parameters.continueOnAPITestsError }}

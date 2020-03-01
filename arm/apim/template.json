@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimPublisherEmail": {
+            "type": "string",
+            "defaultValue": "ahmedelharouny@outlook.com"
+        },
+        "apimPublisherName": {
+            "type": "string",
+            "defaultValue": "APIM DevOps Demo"
+        },
+        "apimSku": {
+            "type": "string",
+            "allowedValues": [
+                "Developer",
+                "Standard",
+                "Premium"
+            ],
+            "defaultValue": "Developer"
+        },
+        "environmentName": {
+            "type": "string"
+        },
+        "apimServiceName": {
+            "type": "string"
+        }
+    },
+    "variables":{
+        "templateBaseUrl": "[deployment().properties.templateLink.uri]",
+        "templateQueryString": "[concat('?', last(split(deployment().properties.templateLink.uri, '?')))]",
+        "uniqueId": "[split(variables('templateBaseUrl'),'/')[3]]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('apimServiceName')]",
+            "type": "Microsoft.ApiManagement/service",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "sku": {
+                "name": "[parameters('apimSku')]",
+                "capacity": 1
+            },
+            "properties": {
+                "publisherEmail": "[parameters('apimPublisherEmail')]",
+                "publisherName": "[parameters('apimPublisherName')]"
+            }
+        }
+    ]
+}
