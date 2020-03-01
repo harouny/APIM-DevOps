@@ -4,7 +4,7 @@ parameters:
 steps:
 - template: 'deploy.yaml'
   parameters:
-    artifactsRoot: '$(Build.Repository.LocalPath)'
+    artifactsRoot: '$(Build.Repository.LocalPath)/arm'
     deploymentMode: 'Validation'
     azureSubscription: 'apim-devops-demo-sp'
     environmentName: 'test'
@@ -14,5 +14,5 @@ steps:
     apiId: '${{ parameters.apiId }}'
     disableAPITests: 'true'
     
-- publish: $(Build.Repository.LocalPath)
+- publish: '$(Build.Repository.LocalPath)/arm'
   artifact: drop

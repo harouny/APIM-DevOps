@@ -18,7 +18,7 @@ steps:
   - task: CopyFiles@2
     displayName: 'Select files to upload to storage'
     inputs:
-      sourceFolder: '${{ parameters.artifactsRoot }}/arm'
+      sourceFolder: '${{ parameters.artifactsRoot }}'
       targetFolder: '${{ parameters.artifactsRoot }}/to_storage'
       # APIM deployment - exclude APIs from copying
       ${{ if and(eq(parameters.apiId, ''), eq(parameters.enableAPIsDeployment, 'false')) }}:
