@@ -78,13 +78,3 @@ steps:
       inlineScript: 'az storage container delete --name ${{ parameters.ARMTemplateContainerName }} --account-name ${{ parameters.ARMTemplateStorageName }}'
       failOnStandardError: true
     condition: always()
-
-  - template: runAPITests.yaml
-    parameters:
-      artifactsRoot: '${{ parameters.artifactsRoot }}'
-      environmentName: '${{ parameters.environmentName }}'
-      resourceGroup: '${{ parameters.resourceGroup }}'
-      apiId: '${{ parameters.apiId }}'
-      azureSubscription: '${{ parameters.azureSubscription }}'
-      disableAPITests: '${{ parameters.disableAPITests }}'
-      continueOnAPITestsError: ${{ parameters.continueOnAPITestsError }}
