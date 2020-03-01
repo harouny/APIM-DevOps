@@ -1,0 +1,65 @@
+name: $(Date:yyyyMMdd).$(Rev:r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+     - README.md
+     - arm/apim/apis
+
+stages:
+- stage: Build
+  jobs:
+  - job: 'Build'
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - template: 'templates/build-and-validate.yaml'
+      parameters:
+        enableAPIsDeployment: '$(enableAPIsDeployment)'
+- stage: Dev
+  jobs:
+  - deployment: Dev
+    pool:
+        vmImage: windows-latest
+    environment: APIM - Dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: 'templates/deploy-to-dev.yaml'
+            parameters:
+              enableAPIsDeployment: '$(enableAPIsDeployment)'
+- stage: Test
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - deployment: Test
+    pool:
+        vmImage: windows-latest
+    environment: APIM - Test
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: 'templates/deploy-to-test.yaml'
+            parameters:
+                enableAPIsDeployment: '$(enableAPIsDeployment)'
+- stage: Production
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - deployment: Production
+    pool:
+        vmImage: windows-latest
+    environment: APIM - Prod
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: 'templates/deploy-to-prod.yaml'
+            parameters:
+              enableAPIsDeployment: '$(enableAPIsDeployment)'
+  
+
