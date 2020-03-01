@@ -75,6 +75,6 @@ steps:
     inputs:
       azureSubscription: '${{ parameters.ARMTemplateStorageServiceConnection }}'
       scriptLocation: inlineScript
-      inlineScript: 'az storage container delete --name ${{ parameters.ARMTemplateContainerName }} --account-name ${{ parameters.ARMTemplateStorageName }}'
+      inlineScript: 'az storage container delete --name ${{ parameters.ARMTemplateContainerName }} --account-name ${{ parameters.ARMTemplateStorageName }} --auth-mode login'
       failOnStandardError: true
     condition: always()
