@@ -1,0 +1,80 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "apimServiceName": {
+        "type": "string",
+        "metadata": {
+          "description": "APIM Service name"
+        }
+      },
+      "environmentName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the environment being deployed. This will be used for naming resources."
+        }
+      }
+    },
+    "variables": {
+      "productsList": [
+          "sales",
+          "pets"
+      ],
+      "templateBaseUrl": "[deployment().properties.templateLink.uri]",
+      "templateQueryString": "[concat('?', last(split(deployment().properties.templateLink.uri, '?')))]",
+      "uniqueId": "[split(variables('templateBaseUrl'),'/')[3]]"
+    },
+    "resources": [
+      {
+        "type": "Microsoft.ApiManagement/service/products",
+        "apiVersion": "2019-01-01",
+        "name": "[concat(parameters('apimServiceName'), '/starter')]",
+        "properties": {
+          "displayName": "Starter",
+          "description": "Subscribers will be able to run 5 calls/minute up to a maximum of 100 calls/week.",
+          "subscriptionRequired": true,
+          "approvalRequired": false,
+          "subscriptionsLimit": 1,
+          "state": "notPublished"
+        }
+      },
+      {
+        "type": "Microsoft.ApiManagement/service/products",
+        "apiVersion": "2019-01-01",
+        "name": "[concat(parameters('apimServiceName'), '/unlimited')]",
+        "properties": {
+          "displayName": "Unlimited",
+          "description": "Subscribers have completely unlimited access to the API. Administrator approval is required.",
+          "subscriptionRequired": true,
+          "approvalRequired": true,
+          "subscriptionsLimit": 1,
+          "state": "notPublished"
+        }
+      },
+      {
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2019-05-01",
+        "name": "[concat(variables('uniqueId'),'-product-', variables('productsList')[copyIndex()])]",
+        "copy": {
+          "name": "products",
+          "count": "[length(variables('productsList'))]"
+        },
+        "properties": {
+          "mode": "Incremental",
+          "templateLink": {
+            "uri": "[uri(variables('templateBaseUrl'), concat(variables('productsList')[copyIndex()], '/template.json', variables('templateQueryString')))]",
+            "contentVersion": "1.0.0.0"
+          },
+          "parameters": {
+            "apimServiceName": {
+              "value": "[parameters('apimServiceName')]"
+            },
+            "approvalRequired": {
+              "value": "[if(equals(parameters('environmentName'), 'prod'), json('true'), json('false'))]"
+            }
+          }
+        }
+      }
+    ]
+  }
+  
