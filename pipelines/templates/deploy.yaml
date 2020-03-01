@@ -67,14 +67,14 @@ steps:
         csmParametersFileLink: '$(StorageUri)parameters.${{ parameters.environmentName }}.json$(SasToken)'
       ${{ if ne(parameters.apiId, '') }}:
         csmFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/template.json$(SasToken)'
-        csmParametersFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/template.parameters.${{ parameters.environmentName }}.json$(SasToken)'
+        csmParametersFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/parameters.${{ parameters.environmentName }}.json$(SasToken)'
   
 
-  - task: AzureCLI@1
-    displayName: 'Delete Temporary Blob Container'
-    inputs:
-      azureSubscription: '${{ parameters.ARMTemplateStorageServiceConnection }}'
-      scriptLocation: inlineScript
-      inlineScript: 'az storage container delete --name ${{ parameters.ARMTemplateContainerName }} --account-name ${{ parameters.ARMTemplateStorageName }} --auth-mode login'
-      failOnStandardError: true
-    condition: always()
+  #- task: AzureCLI@1
+  #  displayName: 'Delete Temporary Blob Container'
+  #  inputs:
+  #    azureSubscription: '${{ parameters.ARMTemplateStorageServiceConnection }}'
+  #    scriptLocation: inlineScript
+  #    inlineScript: 'az storage container delete --name ${{ parameters.ARMTemplateContainerName }} --account-name ${{ parameters.ARMTemplateStorageName }} --auth-mode login'
+  #    failOnStandardError: true
+  #  condition: always()
