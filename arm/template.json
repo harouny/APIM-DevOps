@@ -24,6 +24,16 @@
         },
         "apimServiceName": {
             "type": "string"
+        },
+        "enableAPIsDeployment": {
+            "type": "string",
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "metadata": {
+                "description": "Enable provisioning APIs when deploying APIM or not"
+            }
         }
     },
     "variables":{
