@@ -46,6 +46,29 @@
                 "publisherEmail": "[parameters('apimPublisherEmail')]",
                 "publisherName": "[parameters('apimPublisherName')]"
             }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat(variables('uniqueId'), '-products')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(uri(variables('templateBaseUrl'), 'products/template.json'), variables('templateQueryString'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apimServiceName": {
+                        "value": "[parameters('apimServiceName')]"
+                    },
+                    "environmentName": {
+                        "value": "[parameters('environmentName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apimServiceName'))]"
+            ]
         }
     ]
 }

@@ -1,0 +1,49 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "apimServiceName": {
+        "type": "string",
+        "metadata": {
+          "description": "APIM Service name"
+        }
+      },
+      "approvalRequired":{
+          "type": "bool",
+          "metadata":{
+              "description": "Whether or not APIM maintainance team need to approve product subscriptions"
+          },
+          "defaultValue": false
+      }
+    },
+    "resources": [
+      {
+        "name": "[concat(parameters('apimServiceName'), '/', 'pets')]",
+        "type": "Microsoft.ApiManagement/service/products",
+        "apiVersion": "2019-01-01",
+        "properties": {
+          "displayName": "Pets APIs",
+          "description": "APIs related to Pets",
+          "terms": "Terms and conditions of use to be included here",
+          "subscriptionRequired": true,
+          "approvalRequired": "[parameters('approvalRequired')]",
+          "state": "published"
+        }
+      },
+      {
+        "type": "Microsoft.ApiManagement/service/products/groups",
+        "apiVersion": "2019-01-01",
+        "name": "[concat(parameters('apimServiceName'), '/pets/developers')]",
+        "dependsOn": [
+          "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimServiceName'), 'pets')]"
+        ],
+        "properties": {
+          "displayName": "Developers",
+          "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
+          "builtIn": true,
+          "type": "system"
+        }
+      }
+    ]
+  }
+  
