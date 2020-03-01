@@ -8,7 +8,7 @@ steps:
   artifact: drop
 - template: 'deploy.yaml'
   parameters:
-    artifactsRoot: '$(Pipeline.Workspace)'
+    artifactsRoot: '$(Pipeline.Workspace)/drop'
     azureSubscription: 'apim-devops-demo-sp'
     environmentName: 'test'
     resourceGroup: 'play-with-apim-test'
