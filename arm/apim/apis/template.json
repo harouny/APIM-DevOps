@@ -1,0 +1,63 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the environment being deployed. This will be used for naming resources."
+            }
+        },
+        "apiDeploymentMode": {
+            "type": "string",
+            "allowedValues": [
+                "Serial",
+                "Parallel"
+            ],
+            "defaultValue": "Parallel"
+        },
+        "enableAPIsDeployment": {
+            "type": "string",
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "metadata": {
+                "description": "Enable provisioning APIs when deploying APIM or not"
+            }
+        }
+    },
+    "variables": {
+        "APIs": [
+            "petstore"
+        ],
+        "templateBaseUrl": "[deployment().properties.templateLink.uri]",
+        "templateQueryString": "[concat('?', last(split(deployment().properties.templateLink.uri, '?')))]",
+        "uniqueId": "[split(variables('templateBaseUrl'),'/')[3]]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "condition": "[bool(parameters('enableAPIsDeployment'))]",
+            "copy": {
+                "name": "[concat('Apis-', parameters('environmentName'))]",
+                "count": "[length(variables('APIs'))]",
+                "mode": "[parameters('apiDeploymentMode')]"
+            },
+            "name": "[concat(variables('uniqueId'), '-', variables('APIs')[copyIndex()])]",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(uri(variables('templateBaseUrl'), concat(variables('APIs')[copyIndex()], '/template.json')), variables('templateQueryString'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parametersLink": {
+                    "uri": "[concat(uri(variables('templateBaseUrl'), concat(variables('APIs')[copyIndex()], '/template.parameters.', parameters('environmentName'), '.json')), variables('templateQueryString'))]",
+                    "contentVersion": "1.0.0.0"
+                }
+            }
+        }
+    ]
+}

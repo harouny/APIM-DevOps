@@ -1,0 +1,98 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimServiceName": {
+            "type": "string",
+            "metadata": {
+                "description": "APIM Service name"
+            }
+        },
+        "apiDefinitionUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend Service API definition URL"
+            }
+        }
+    },
+    "variables": {
+        "apiId": "petstore",
+        "displayName": "Swagger Petstore",
+        "description": "This is a sample server Petstore server.",
+        "path": "petstore",
+        "versions": [
+            "v2"
+        ],
+        "products": [
+            "pets"
+        ],
+        "templateBaseUrl": "[deployment().properties.templateLink.uri]",
+        "uniqueId": "[split(variables('templateBaseUrl'),'/')[3]]",
+        "templateQueryString": "[concat('?', last(split(deployment().properties.templateLink.uri, '?')))]",
+        "policyUrl": "[concat(uri(variables('templateBaseUrl'), 'policy.xml'), variables('templateQueryString'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-01-01",
+            "type": "Microsoft.ApiManagement/service/api-version-sets",
+            "name": "[concat(parameters('apimServiceName'), '/', variables('apiId'))]",
+            "properties": {
+                "displayName": "[variables('displayName')]",
+                "description": "[variables('description')]",
+                "versioningScheme": "Segment"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat(variables('uniqueId'), '-api-', variables('apiId'), variables('versions')[copyIndex()])]",
+            "copy": {
+                "name": "versions",
+                "count": "[length(variables('versions'))]"
+            },
+            "DependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('apimServiceName'), variables('apiId'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(variables('templateBaseUrl'), concat('/templates/', variables('uniqueId'), '/apim/apis/standard-api.template.json', variables('templateQueryString')))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apimServiceName": {
+                        "value": "[parameters('apimServiceName')]"
+                    },
+                    "uniqueId": {
+                        "value": "[variables('uniqueId')]"
+                    },
+                    "apiDefinitionUrl": {
+                        "value": "[parameters('apiDefinitionUrl')]"
+                    },
+                    "apiId": {
+                        "value": "[variables('apiId')]"
+                    },
+                    "apiVersion": {
+                        "value": "[variables('versions')[copyIndex()]]"
+                    },
+                    "products": {
+                        "value": "[variables('products')]"
+                    },
+                    "displayName": {
+                        "value": "[variables('displayName')]"
+                    },
+                    "description": {
+                        "value": "[variables('description')]"
+                    },
+                    "path": {
+                        "value": "[variables('path')]"
+                    },
+                    "policyUrl": {
+                        "value": "[variables('policyUrl')]"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -24,6 +24,16 @@
         },
         "apimServiceName": {
             "type": "string"
+        },
+        "enableAPIsDeployment": {
+            "type": "string",
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "metadata": {
+                "description": "Enable provisioning APIs when deploying APIM or not"
+            }
         }
     },
     "variables":{
@@ -68,6 +78,33 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.ApiManagement/service/', parameters('apimServiceName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "[concat(variables('uniqueId'), '-APIs')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(uri(variables('templateBaseUrl'), 'apis/template.json'), variables('templateQueryString'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "environmentName": {
+                        "value": "[parameters('environmentName')]"
+                    },
+                    "apiDeploymentMode": {
+                        "value": "[if(equals(parameters('apimSku'), 'Developer'), 'Serial', 'Parallel')]"
+                    },
+                    "enableAPIsDeployment": {
+                        "value": "[parameters('enableAPIsDeployment')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apimServiceName'))]",
+                "[concat(variables('uniqueId'), '-products')]"
             ]
         }
     ]
