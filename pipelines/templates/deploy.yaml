@@ -64,10 +64,10 @@ steps:
       ${{ if eq(parameters.apiId, '') }}:
         overrideParameters: -enableAPIsDeployment ${{ parameters.enableAPIsDeployment }}
         csmFileLink: '$(StorageUri)template.json$(SasToken)'
-        csmParametersFileLink: '$(StorageUri)parameters.${{ parameters.environmentName }}.json$(SasToken)'
+        csmParametersFileLink: '$(StorageUri)template.parameters.${{ parameters.environmentName }}.json$(SasToken)'
       ${{ if ne(parameters.apiId, '') }}:
         csmFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/template.json$(SasToken)'
-        csmParametersFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/parameters.${{ parameters.environmentName }}.json$(SasToken)'
+        csmParametersFileLink: '$(StorageUri)apim/apis/${{ parameters.apiId }}/template.parameters.${{ parameters.environmentName }}.json$(SasToken)'
   
 
   #- task: AzureCLI@1
