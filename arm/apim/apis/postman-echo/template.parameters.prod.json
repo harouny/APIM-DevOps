@@ -1,0 +1,21 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimServiceName": {
+            "value": "apim-devops-service-prod"
+        },
+        "apiDefinitionUrl": {
+            "value": "https://app.swaggerhub.com/apiproxy/registry/AElharouny/PostmanEcho/0.1"
+        },
+        "namedValues": {
+            "value": [
+                {
+                    "name": "current-environment",
+                    "secret": "false",
+                    "value": "production"
+                }
+            ]
+        }
+    }
+}
