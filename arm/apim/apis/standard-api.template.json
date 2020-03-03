@@ -1,0 +1,177 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimServiceName": {
+            "type": "string"
+        },
+        "apiDefinitionUrl": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "apiDefinitionFormat": {
+            "type": "string",
+            "defaultValue": "swagger-link-json"
+        },
+        "uniqueId": {
+            "type": "string"
+        },
+        "products": {
+            "type": "array"
+        },
+        "apiVersion": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "apiId": {
+            "type": "string"
+        },
+        "displayName": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "path": {
+            "type": "string"
+        },
+        "policyUrl": {
+            "type": "string"
+        },
+        "namedValues": {
+            "type": "array",
+            "defaultValue": [
+            ]
+        }
+    },
+    "variables": {
+        "templateBaseUrl": "[deployment().properties.templateLink.uri]",
+        "templateQueryString": "[concat('?', last(split(deployment().properties.templateLink.uri, '?')))]",
+        "apiName": "[concat(parameters('apiId'), replace(parameters('apiVersion'), '.' , '-'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('ApimServiceName'), '/', variables('apiName'))]",
+            "type": "Microsoft.ApiManagement/service/apis",
+            "apiVersion": "2019-01-01",
+            "properties": {
+                "displayName": "[parameters('displayName')]",
+                "apiRevision": "1",
+                "description": "[parameters('description')]",
+                "path": "[parameters('path')]",
+                "protocols": [
+                    "https"
+                ],
+                "isCurrent": true,
+                "apiVersion": "[parameters('apiVersion')]",
+                "apiVersionDescription": "[if(equals(parameters('apiVersion'), ''), '', concat('Version ', parameters('apiVersion')))]",
+                "apiVersionSetId": "[if(equals(parameters('apiVersion'), ''), json('null'), concat(resourceId('Microsoft.ApiManagement/service', parameters('ApimServiceName')), '/apiVersionSets/', parameters('apiId')))]"
+            }
+        },
+        {
+            "condition": "[greater(length(parameters('namedValues')), 0)]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(parameters('uniqueId'), '-api-namedValues-', copyIndex())]",
+            "apiVersion": "2017-05-10",
+            "copy": {
+                "name": "namedValuesCopy",
+                "count": "[if(greater(length(parameters('namedValues')), 0), length(parameters('namedValues')), 1)]"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "name": "[concat(parameters('apimServiceName'), '/', parameters('apiId'), '-', parameters('namedValues')[copyIndex()].name)]",
+                            "type": "Microsoft.ApiManagement/service/properties",
+                            "apiVersion": "2019-01-01",
+                            "properties": {
+                                "displayName": "[concat(parameters('apiId'), '-', parameters('namedValues')[copyIndex()].name)]",
+                                "value": "[parameters('namedValues')[copyIndex()].value]",
+                                "secret": "[parameters('namedValues')[copyIndex()].secret]"
+                            }
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimServiceName'), variables('apiName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "[concat(parameters('uniqueId'), '-',  variables('apiName'), '-definition')]",
+            "condition": "[not(empty(parameters('apiDefinitionUrl')))]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(uri(variables('templateBaseUrl'), 'standard-api-definition.template.json'), variables('templateQueryString'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apimServiceName": {
+                        "value": "[parameters('apimServiceName')]"
+                    },
+                    "apiDefinitionUrl": {
+                        "value": "[parameters('apiDefinitionUrl')]"
+                    },
+                    "apiDefinitionFormat": {
+                        "value": "[parameters('apiDefinitionFormat')]"
+                    },
+                    "apiVersion": {
+                        "value": "[parameters('apiVersion')]"
+                    },
+                    "apiName": {
+                        "value": "[variables('apiName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimServiceName'), variables('apiName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/policies",
+            "name": "[concat(parameters('apimServiceName'), '/', variables('apiName'), '/policy')]",
+            "apiVersion": "2018-01-01",
+            "properties": {
+                "policyContent": "[parameters('policyUrl')]",
+                "contentFormat": "rawxml-link"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimServiceName'), variables('apiName'))]"
+            ]
+        },
+        {
+            "condition": "[greater(length(parameters('products')), 0)]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(parameters('uniqueId'), '-api-product-', copyIndex())]",
+            "apiVersion": "2017-05-10",
+            "copy": {
+                "name": "productCopy",
+                "count": "[if(greater(length(parameters('products')), 0), length(parameters('products')), 1)]"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.ApiManagement/service/products/apis",
+                            "name": "[concat(parameters('apimServiceName'), '/', parameters('products')[copyIndex()], '/', variables('apiName'))]",
+                            "apiVersion": "2019-01-01",
+                            "properties": {}
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimServiceName'), variables('apiName'))]"
+            ]
+        }
+    ]
+}

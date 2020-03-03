@@ -67,6 +67,9 @@
                     },
                     "apimServiceName": {
                         "value": "[parameters('apimServiceName')]"
+                    },
+                    "enableAPIsDeployment": {
+                        "value": "[parameters('enableAPIsDeployment')]"
                     }
                 }
             },

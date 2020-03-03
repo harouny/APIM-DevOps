@@ -1,0 +1,73 @@
+name: $(Date:yyyyMMdd).$(Rev:r)
+
+variables:
+  apiId: 'petstore'
+ 
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+     - arm/apim/apis/petstore
+
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+     - arm/apim/apis/petstore
+
+stages:
+- stage: Build
+  jobs:
+  - job: 'Build'
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - template: '../../../../pipelines/templates/build-and-validate.yaml'
+      parameters:
+        apiId: '$(apiId)'
+- stage: Dev
+  jobs:
+  - deployment: Dev
+    pool:
+        vmImage: windows-latest
+    environment: APIM - Dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: '../../../../pipelines/templates/deploy-to-dev.yaml'
+            parameters:
+              apiId: '$(apiId)'
+- stage: Test
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - deployment: Test
+    pool:
+        vmImage: windows-latest
+    environment: APIM - Test
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: '../../../../pipelines/templates/deploy-to-test.yaml'
+            parameters:
+              apiId: '$(apiId)'
+- stage: Production
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - deployment: Production
+    pool:
+        vmImage: windows-latest
+    environment: APIM - $(apiId) - Prod
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: '../../../../pipelines/templates/deploy-to-prod.yaml'
+            parameters:
+              apiId: '$(apiId)'

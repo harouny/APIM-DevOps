@@ -1,0 +1,53 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimServiceName": {
+            "type": "string",
+            "metadata": {
+                "description": "APIM service name"
+            }
+        },
+        "apiDefinitionUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "backend api swagger url"
+            }
+        },
+        "apiDefinitionFormat": {
+            "type": "string",
+            "metadata": {
+                "description": "format"
+            }
+        },
+        "apiVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "api version"
+            }
+        },
+        "apiName": {
+             "type": "string",
+            "metadata": {
+                "description": "api name from api id and version"
+            }
+        }
+    },
+    "variables": {
+        "apiDefinitionUrl": "[format(parameters('apiDefinitionUrl'), parameters('apiVersion'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service/apis",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('ApimServiceName'), '/', parameters('apiName'))]",
+            "properties": {
+                "format": "[parameters('apiDefinitionFormat')]",
+                "value": "[variables('apiDefinitionUrl')]",
+                "protocols": [
+                    "https"
+                ]
+            }
+        }
+    ]
+}
