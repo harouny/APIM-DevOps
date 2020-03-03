@@ -57,7 +57,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[uri(variables('templateBaseUrl'), concat('/templates/', variables('uniqueId'), '/apim/apis/standard-api.template.json', variables('templateQueryString')))]",
+                    "uri": "[uri(variables('templateBaseUrl'), concat('/', variables('uniqueId'), '/apim/apis/standard-api.template.json', variables('templateQueryString')))]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
