@@ -121,14 +121,8 @@
                     "apiDefinitionFormat": {
                         "value": "[parameters('apiDefinitionFormat')]"
                     },
-                    "apiId": {
-                        "value": "[parameters('apiId')]"
-                    },
                     "apiVersion": {
                         "value": "[parameters('apiVersion')]"
-                    },
-                    "displayName": {
-                        "value": "[parameters('displayName')]"
                     },
                     "apiName": {
                         "value": "[variables('apiName')]"
